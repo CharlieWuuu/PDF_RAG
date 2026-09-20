@@ -1,0 +1,16 @@
+{
+  "name": "pdf-rag-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "inspect": "tsx scripts/inspect-pdf.ts"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

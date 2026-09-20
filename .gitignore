@@ -1,0 +1,18 @@
+# 相依套件
+node_modules/
+
+# 金鑰：一律不進版控
+.env
+.env.local
+
+# 測試用 PDF：課本有版權，且檔案大
+*.pdf
+samples/
+
+# 建置產物
+dist/
+.next/
+build/
+
+# 系統
+.DS_Store
