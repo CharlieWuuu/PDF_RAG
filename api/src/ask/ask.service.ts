@@ -10,7 +10,8 @@ export { isRelevant, buildPrompt, NO_ANSWER, type Source } from './retrieval.js'
 @Injectable()
 export class AskService {
   constructor(
-    private readonly db: DbService,
+    // 同 DocumentsService：明確標註，不依賴型別中繼資料
+    @Inject(DbService) private readonly db: DbService,
     @Inject(EMBEDDING_PROVIDER) private readonly embedding: EmbeddingProvider,
     @Inject(LLM_PROVIDER) private readonly llm: LlmProvider,
   ) {}

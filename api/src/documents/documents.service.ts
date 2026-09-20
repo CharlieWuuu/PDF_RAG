@@ -16,7 +16,9 @@ export interface DocumentRow {
 @Injectable()
 export class DocumentsService {
   constructor(
-    private readonly db: DbService,
+    // 明確標註注入目標：tsx／esbuild 不支援 emitDecoratorMetadata，
+    // 無法從型別推導相依，因此所有注入一律寫出 @Inject()
+    @Inject(DbService) private readonly db: DbService,
     @Inject(EMBEDDING_PROVIDER) private readonly embedding: EmbeddingProvider,
   ) {}
 

@@ -13,7 +13,7 @@
                         ┌───────────────┼───────────────┐
                         ▼               ▼               ▼
                  ┌────────────┐  ┌────────────┐  ┌────────────┐
-                 │  OpenAI    │  │ Claude API │  │ PostgreSQL │
+                 │  OpenAI    │  │  OpenAI    │  │ PostgreSQL │
                  │ embedding  │  │  回答生成   │  │ + pgvector │
                  └────────────┘  └────────────┘  └────────────┘
 ```
@@ -22,7 +22,7 @@
 
 **匯入**　PDF → 逐頁擷取文字 → 移除頁首頁尾 → 切塊 → 批次 embedding → 單一交易寫入 `documents` 與 `chunks`
 
-**查詢**　問題 → embedding → pgvector cosine 取 top-k → 相似度門檻判斷 → 組 prompt → Claude 以 SSE 串流回答
+**查詢**　問題 → embedding → pgvector cosine 取 top-k → 相似度門檻判斷 → 組 prompt → LLM 以 SSE 串流回答
 
 ## 技術選擇
 
@@ -32,7 +32,7 @@
 | 後端 | NestJS，Controller / Service 分層 | |
 | 資料庫 | PostgreSQL + pgvector，用 `pg` 寫參數化 SQL | 不用 ORM，SQL 一目了然，向量查詢也不必繞過 ORM 抽象 |
 | Embedding | OpenAI `text-embedding-3-small`（1536 維） | |
-| 回答生成 | Claude API | |
+| 回答生成 | OpenAI `gpt-4o-mini` | 與 embedding 同一家，只需一把金鑰；已抽成介面，要換 Claude 或 Gemini 只改一行綁定 |
 
 ### 為什麼選 pgvector
 
@@ -89,7 +89,7 @@ pgvector 的 `<=>` 回傳 cosine distance，0 表示完全相同。**最佳結�
 
 ```bash
 # 1. 設定環境變數
-cp .env.example .env    # 填入 OPENAI_API_KEY 與 ANTHROPIC_API_KEY
+cp .env.example .env    # 填入 OPENAI_API_KEY
 
 # 2. 啟動資料庫（容器首次啟動會自動執行 db/init.sql 建表）
 docker compose up -d
@@ -145,7 +145,7 @@ chunks(id uuid, document_id uuid, page int, chunk_index int, content text, embed
 
 ## 設計上的幾個決定
 
-- **Embedding 與 LLM 各包成一個介面**（`EmbeddingProvider`、`LlmProvider`），要換 Gemini 或 Azure OpenAI 只需新增實作並改 module 的綁定，呼叫端不動。
+- **Embedding 與 LLM 各包成一個介面**（`EmbeddingProvider`、`LlmProvider`），要換 Gemini 或 Azure OpenAI 只需新增實作並改 module 的綁定，呼叫端不動。`providers/` 下同時保留 `OpenAiLlmProvider` 與 `ClaudeLlmProvider` 兩個實作，就是這個設計的實證——切換只是改 `ask.module.ts` 的一行。
 - **Embedding 在資料庫交易之外先算完**：外部 API 可能很慢，不應該讓交易與連線被長時間佔住。
 - **文件與所有片段寫在同一個交易**：任何一步失敗就整批 rollback，避免留下查不到內容的空文件。
 - **`DbService` 只提供參數化查詢介面**，不提供任何字串拼接 SQL 的方法，從根本杜絕 SQL injection。

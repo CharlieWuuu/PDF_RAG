@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Inject, Post, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AskService } from './ask.service.js';
 
@@ -8,7 +8,7 @@ interface AskDto {
 
 @Controller('ask')
 export class AskController {
-  constructor(private readonly ask: AskService) {}
+  constructor(@Inject(AskService) private readonly ask: AskService) {}
 
   /**
    * 用 POST + SSE 而非 GET + EventSource：
@@ -28,7 +28,7 @@ export class AskController {
     res.flushHeaders();
 
     // 前端 AbortController 取消時連線會關閉，
-    // 這裡把它轉成 AbortSignal 往下傳，讓對 Claude 的請求也真的中止
+    // 這裡把它轉成 AbortSignal 往下傳，讓對 LLM 的請求也真的中止
     const controller = new AbortController();
     req.on('close', () => controller.abort());
 

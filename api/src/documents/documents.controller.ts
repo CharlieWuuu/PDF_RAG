@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Controller,
   Delete,
   Get,
@@ -17,7 +18,7 @@ const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documents: DocumentsService) {}
+  constructor(@Inject(DocumentsService) private readonly documents: DocumentsService) {}
 
   @Post()
   // 存在記憶體即可：檔案解析完就不再需要，省去清理暫存檔的麻煩

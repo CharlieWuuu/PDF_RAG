@@ -28,8 +28,10 @@ export const config = {
   },
 
   llm: {
-    apiKey: required('ANTHROPIC_API_KEY'),
-    model: process.env.LLM_MODEL ?? 'claude-sonnet-5',
+    // 目前 embedding 與生成同為 OpenAI，共用一把金鑰。
+    // 若日後生成端換回 Claude，這裡改讀 ANTHROPIC_API_KEY 即可
+    apiKey: required('OPENAI_API_KEY'),
+    model: process.env.LLM_MODEL ?? 'gpt-4o-mini',
   },
 
   chunking: {
