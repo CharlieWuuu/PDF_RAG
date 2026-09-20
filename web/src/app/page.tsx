@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { streamAsk, type Source } from '@/lib/api';
 
 /** 檢索與生成是兩個階段，狀態分開才能顯示「搜尋中…」 */
@@ -88,7 +89,27 @@ export default function AskPage() {
 
       {answer && (
         <div className="rounded-lg border bg-white p-5">
-          <p className="whitespace-pre-wrap leading-relaxed">{answer}</p>
+          {/*
+            模型的回答帶有 Markdown 語法（粗體、編號清單），直接輸出會看到
+            原始的 ** 符號。react-markdown 預設不解析 raw HTML，
+            因此模型即使吐出 <script> 也只會被當成文字，不必額外消毒。
+          */}
+          <div className="space-y-3 leading-relaxed">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p>{children}</p>,
+                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                ol: ({ children }) => <ol className="list-decimal space-y-2 pl-5">{children}</ol>,
+                ul: ({ children }) => <ul className="list-disc space-y-2 pl-5">{children}</ul>,
+                li: ({ children }) => <li className="pl-1">{children}</li>,
+                code: ({ children }) => (
+                  <code className="rounded bg-slate-100 px-1 py-0.5 text-sm">{children}</code>
+                ),
+              }}
+            >
+              {answer}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
 
