@@ -22,16 +22,17 @@ export const config = {
   databaseUrl: required('DATABASE_URL'),
 
   embedding: {
-    apiKey: required('OPENAI_API_KEY'),
-    model: process.env.EMBEDDING_MODEL ?? 'text-embedding-3-small',
+    apiKey: required('GEMINI_API_KEY'),
+    model: process.env.EMBEDDING_MODEL ?? 'gemini-embedding-001',
+    // Gemini 預設 3072 維，指定 1536 以沿用既有的 vector(1536) 欄位
     dimensions: num('EMBEDDING_DIMENSIONS', 1536),
   },
 
   llm: {
-    // 目前 embedding 與生成同為 OpenAI，共用一把金鑰。
-    // 若日後生成端換回 Claude，這裡改讀 ANTHROPIC_API_KEY 即可
-    apiKey: required('OPENAI_API_KEY'),
-    model: process.env.LLM_MODEL ?? 'gpt-4o-mini',
+    // 目前 embedding 與生成同為 Gemini，共用一把金鑰。
+    // 若日後生成端換成別家，這裡改讀對應的金鑰即可
+    apiKey: required('GEMINI_API_KEY'),
+    model: process.env.LLM_MODEL ?? 'gemini-2.5-flash',
   },
 
   chunking: {

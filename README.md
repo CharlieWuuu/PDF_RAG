@@ -13,7 +13,7 @@
                         ┌───────────────┼───────────────┐
                         ▼               ▼               ▼
                  ┌────────────┐  ┌────────────┐  ┌────────────┐
-                 │  OpenAI    │  │  OpenAI    │  │ PostgreSQL │
+                 │  Gemini    │  │  Gemini    │  │ PostgreSQL │
                  │ embedding  │  │  回答生成   │  │ + pgvector │
                  └────────────┘  └────────────┘  └────────────┘
 ```
@@ -31,8 +31,8 @@
 | 前端 | Next.js App Router、TypeScript、Tailwind | |
 | 後端 | NestJS，Controller / Service 分層 | |
 | 資料庫 | PostgreSQL + pgvector，用 `pg` 寫參數化 SQL | 不用 ORM，SQL 一目了然，向量查詢也不必繞過 ORM 抽象 |
-| Embedding | OpenAI `text-embedding-3-small`（1536 維） | |
-| 回答生成 | OpenAI `gpt-4o-mini` | 與 embedding 同一家，只需一把金鑰；已抽成介面，要換 Claude 或 Gemini 只改一行綁定 |
+| Embedding | Gemini `gemini-embedding-001`（指定 1536 維） | 有免費額度；預設 3072 維，指定 1536 以沿用既有欄位 |
+| 回答生成 | Gemini `gemini-2.5-flash` | 與 embedding 同一家，只需一把金鑰；已抽成介面，要換 OpenAI 或 Claude 只改一行綁定 |
 
 ### 為什麼選 pgvector
 
@@ -77,8 +77,25 @@ pgvector 的 `<=>` 回傳 cosine distance，0 表示完全相同。**最佳結�
 
 `0.55` 是保守的起點，**務必用自己的文件校準**：問答頁的每個來源都會顯示實際距離，可據此調整 `SIMILARITY_THRESHOLD`。
 
+以一份光合作用的測試文件實測（Gemini embedding，1536 維）：
+
+| 問題 | 最佳距離 | 判定 |
+| --- | --- | --- |
+| 光合作用發生在植物的哪個部位？ | 0.32 | 通過 |
+| 卡爾文循環的作用是什麼？ | 0.37 | 通過 |
+| 植物如何獲取能量？ | 0.38 | 通過 |
+| 氧氣是怎麼產生的？ | 0.42 | 通過 |
+| 什麼是光？（邊緣相關） | 0.46 | 通過 |
+| 細胞的結構（邊緣相關） | 0.49 | 通過 |
+| 如何煮出好吃的牛肉麵？ | 0.57 | 擋下 |
+| 今天天氣如何？ | 0.58 | 擋下 |
+| 台北到高雄的高鐵票價？ | 0.61 | 擋下 |
+
+**切身相關的問題落在 0.32–0.42，完全無關的落在 0.57 以上**，中間有明顯的空隙，`0.55` 落在這個空隙裡因此是合理的分界。要注意 0.46–0.49 的「邊緣相關」問題會通過——這類問題檢索得到內容，但 prompt 會要求模型在片段不足以回答時照實說不知道。
+
 ## 已知限制
 
+- **Gemini 免費額度有每分鐘請求數限制**，匯入大型 PDF 時可能觸發；已實作指數退避重試，但極大的檔案仍可能變慢。
 - **不支援掃描版 PDF**：純圖片的 PDF 擷取不到文字，系統會在上傳時直接回報錯誤，不做 OCR。
 - **表格可能錯亂**：表格在 PDF 中只是帶座標的文字碎片，依座標串成行之後，欄位關係會遺失。
 - **雙欄排版可能交錯**：目前依 y 座標分行、x 座標排序，雙欄版面的左右兩欄會被併成同一行。若要支援，需要先做欄位偵測再分區塊處理。
@@ -89,7 +106,7 @@ pgvector 的 `<=>` 回傳 cosine distance，0 表示完全相同。**最佳結�
 
 ```bash
 # 1. 設定環境變數
-cp .env.example .env    # 填入 OPENAI_API_KEY
+cp .env.example .env    # 填入 GEMINI_API_KEY
 
 # 2. 啟動資料庫（容器首次啟動會自動執行 db/init.sql 建表）
 docker compose up -d
@@ -145,7 +162,7 @@ chunks(id uuid, document_id uuid, page int, chunk_index int, content text, embed
 
 ## 設計上的幾個決定
 
-- **Embedding 與 LLM 各包成一個介面**（`EmbeddingProvider`、`LlmProvider`），要換 Gemini 或 Azure OpenAI 只需新增實作並改 module 的綁定，呼叫端不動。`providers/` 下同時保留 `OpenAiLlmProvider` 與 `ClaudeLlmProvider` 兩個實作，就是這個設計的實證——切換只是改 `ask.module.ts` 的一行。
+- **Embedding 與 LLM 各包成一個介面**（`EmbeddingProvider`、`LlmProvider`），要換 Gemini 或 Azure OpenAI 只需新增實作並改 module 的綁定，呼叫端不動。`providers/` 下同時保留 Gemini、OpenAI、Claude 三組實作，就是這個設計的實證——本專案實際從 Claude 換成 OpenAI、再換成 Gemini，每次都只改 module 的一行綁定，`AskService` 與 controller 完全沒有變動。
 - **Embedding 在資料庫交易之外先算完**：外部 API 可能很慢，不應該讓交易與連線被長時間佔住。
 - **文件與所有片段寫在同一個交易**：任何一步失敗就整批 rollback，避免留下查不到內容的空文件。
 - **`DbService` 只提供參數化查詢介面**，不提供任何字串拼接 SQL 的方法，從根本杜絕 SQL injection。
