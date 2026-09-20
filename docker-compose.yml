@@ -1,0 +1,22 @@
+# 本機開發只跑資料庫；前後端用 npm 直接跑，改一行程式就生效，迭代比較快。
+# 正式環境改用 Neon，只需換 DATABASE_URL，程式不動。
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pdf_rag
+    ports:
+      - '5433:5432'   # 避開本機可能已佔用的 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 容器首次啟動時自動執行，省去手動建表步驟
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d pdf_rag']
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:

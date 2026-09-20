@@ -1,5 +1,10 @@
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import type { TextItem } from 'pdfjs-dist/types/src/display/api';
+
+/** pdfjs 的文字碎片：str 是內容，transform[4]/[5] 是頁面上的 x/y 座標 */
+interface TextItem {
+  str: string;
+  transform: number[];
+}
 
 export interface PageText {
   /** 頁碼從 1 開始，對使用者顯示時不需再換算 */
