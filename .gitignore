@@ -16,3 +16,4 @@ build/
 
 # 系統
 .DS_Store
+next-env.d.ts
