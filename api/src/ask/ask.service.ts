@@ -51,8 +51,14 @@ export class AskService {
     // 先送出來源，前端可在文字還沒生成前就顯示出處
     yield { type: 'sources', sources };
 
+    let produced = false;
     for await (const text of this.llm.stream(buildPrompt(question, sources), signal)) {
+      produced = true;
       yield { type: 'text', text };
     }
+
+    // 模型偶爾會回傳空串流（例如問題與片段完全無關時）。
+    // 若不補這一句，使用者會看到一片空白而不知道發生什麼事
+    if (!produced) yield { type: 'text', text: NO_ANSWER };
   }
 }

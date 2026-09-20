@@ -58,7 +58,11 @@ export default function AskPage() {
           placeholder="請輸入問題…"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
+          // 中文輸入法選字時也會觸發 Enter，isComposing 用來排除那種情況，
+          // 否則選字按 Enter 會誤送出未完成的問題
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAsk();
+          }}
         />
         {status === 'idle' ? (
           <button

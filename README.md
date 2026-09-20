@@ -32,7 +32,7 @@
 | 後端 | NestJS，Controller / Service 分層 | |
 | 資料庫 | PostgreSQL + pgvector，用 `pg` 寫參數化 SQL | 不用 ORM，SQL 一目了然，向量查詢也不必繞過 ORM 抽象 |
 | Embedding | Gemini `gemini-embedding-001`（指定 1536 維） | 有免費額度；預設 3072 維，指定 1536 以沿用既有欄位 |
-| 回答生成 | Gemini `gemini-2.5-flash` | 與 embedding 同一家，只需一把金鑰；已抽成介面，要換 OpenAI 或 Claude 只改一行綁定 |
+| 回答生成 | Gemini `gemini-3.5-flash-lite` | 與 embedding 同一家，只需一把金鑰；已抽成介面，要換 OpenAI 或 Claude 只改一行綁定 |
 
 ### 為什麼選 pgvector
 
@@ -95,7 +95,8 @@ pgvector 的 `<=>` 回傳 cosine distance，0 表示完全相同。**最佳結�
 
 ## 已知限制
 
-- **回答長度上限 4096 token**，極長的問題可能仍會被截斷。注意 Gemini 2.5 的 `maxOutputTokens` 同時涵蓋內部推理與正文，本專案已關閉思考預算（`thinkingBudget: 0`），將額度全數留給正文。
+- **回答長度上限 8192 token**，極長的問題可能仍會被截斷。注意 `maxOutputTokens` 同時涵蓋模型的內部推理與正文，設得太小會導致推理吃光額度、正文被截斷。
+- **免費額度有每日與每分鐘的請求數限制**，`gemini-2.5-flash` 每日僅 20 次生成，因此改用配額較寬的 `gemini-3.5-flash-lite`；額度用罄時會回傳中文提示。
 - **Gemini 免費額度有每分鐘請求數限制**，匯入大型 PDF 時可能觸發；已實作指數退避重試，但極大的檔案仍可能變慢。
 - **不支援掃描版 PDF**：純圖片的 PDF 擷取不到文字，系統會在上傳時直接回報錯誤，不做 OCR。
 - **表格可能錯亂**：表格在 PDF 中只是帶座標的文字碎片，依座標串成行之後，欄位關係會遺失。

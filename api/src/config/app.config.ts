@@ -32,7 +32,8 @@ export const config = {
     // 目前 embedding 與生成同為 Gemini，共用一把金鑰。
     // 若日後生成端換成別家，這裡改讀對應的金鑰即可
     apiKey: required('GEMINI_API_KEY'),
-    model: process.env.LLM_MODEL ?? 'gemini-2.5-flash',
+    // flash-lite 的免費每日配額較寬（gemini-2.5-flash 每日僅 20 次生成）
+    model: process.env.LLM_MODEL ?? 'gemini-3.5-flash-lite',
   },
 
   chunking: {
