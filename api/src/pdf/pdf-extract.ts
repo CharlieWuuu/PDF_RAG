@@ -1,4 +1,12 @@
+import { createRequire } from 'node:module';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+
+// 中文 PDF 多使用 CID 字型，需要 cMap 表才能把編碼正確對應回字元。
+// 少了它，pdfjs 會發出 translateFont 警告，部分中文可能解碼失敗
+const require = createRequire(import.meta.url);
+const CMAP_URL = require
+  .resolve('pdfjs-dist/package.json')
+  .replace(/package\.json$/, 'cmaps/');
 
 /** pdfjs 的文字碎片：str 是內容，transform[4]/[5] 是頁面上的 x/y 座標 */
 interface TextItem {
@@ -20,7 +28,13 @@ export interface PageText {
  */
 export async function extractPages(data: Uint8Array): Promise<PageText[]> {
   // 停用 worker：CLI 與後端都是單次批次處理，多開 worker 反而增加相依與啟動成本
-  const doc = await getDocument({ data, useSystemFonts: true, isEvalSupported: false }).promise;
+  const doc = await getDocument({
+    data,
+    useSystemFonts: true,
+    isEvalSupported: false,
+    cMapUrl: CMAP_URL,
+    cMapPacked: true,
+  }).promise;
 
   const pages: PageText[] = [];
   for (let page = 1; page <= doc.numPages; page++) {
