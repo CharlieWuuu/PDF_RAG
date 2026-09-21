@@ -48,7 +48,7 @@ export default function ComparePage() {
 
   return (
     <div className="flex h-[calc(100vh-8.5rem)] flex-col gap-4">
-      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+      <div className="flex-1 space-y-3 overflow-y-auto">
         {state.elapsedMs !== null && state.status === 'idle' && (
           <p className="text-right text-xs text-slate-400">
             {(state.elapsedMs / 1000).toFixed(1)} 秒
@@ -57,7 +57,7 @@ export default function ComparePage() {
         <AnswerPanel state={state} apiBase={API_BASE} />
       </div>
 
-      <div className="flex gap-2 bg-slate-50 pt-4">
+      <div className="flex gap-2">
         <input
           className="flex-1 rounded-lg border px-4 py-2"
           placeholder="請輸入問題…"

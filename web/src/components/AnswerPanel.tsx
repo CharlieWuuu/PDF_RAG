@@ -34,7 +34,7 @@ export function AnswerPanel({ state, apiBase }: { state: AnswerState; apiBase: s
       )}
 
       {state.answer && (
-        <div className="rounded-lg border bg-white p-4 text-sm leading-relaxed">
+        <div className="rounded-lg border p-4 text-sm leading-relaxed">
           <ReactMarkdown
             components={{
               strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
@@ -71,7 +71,7 @@ function SourceItem({ source, apiBase }: { source: Source; apiBase: string }) {
     source.documentId && pageImageUrl(apiBase, source.documentId, source.page);
 
   return (
-    <details className="rounded border bg-white p-2 text-xs">
+    <details className="rounded border p-2 text-xs">
       <summary className="cursor-pointer">
         第 {source.page} 頁
         {isVisual && (
