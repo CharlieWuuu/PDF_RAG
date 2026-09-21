@@ -115,12 +115,29 @@ cp .env.example .env    # 填入 GEMINI_API_KEY 與 POSTGRES_PASSWORD
 # 2. 啟動資料庫（容器首次啟動會自動執行 db/init.sql 建表）
 docker compose up -d
 
-# 3. 後端
-cd api && npm install && npm run dev      # http://localhost:3001
+# 3. 後端（擇一）
+cd api && npm install && npm run dev            # NestJS 版 → :3001
+cd api-python && make install && make dev       # Python 版 → :8000
 
 # 4. 前端
-cd web && npm install && npm run dev      # http://localhost:3000
+cd web && npm install && npm run dev            # http://localhost:3000
 ```
+
+前端以環境變數決定要連哪一個後端，在 `web/.env.local` 設定後重啟即可切換：
+
+```
+NEXT_PUBLIC_API_BASE=http://localhost:3001   # NestJS 版
+NEXT_PUBLIC_API_BASE=http://localhost:8000   # Python 版
+```
+
+Python 版的常用指令收在 `api-python/Makefile`（Python 沒有 npm scripts 的對應機制，慣例上以 Makefile 補足）：
+
+| 指令 | 對應 NestJS 版 |
+| --- | --- |
+| `make dev` | `npm run dev` |
+| `make test` | `npm test` |
+| `make install` | `npm install` |
+| `make inspect FILE=x.pdf` | `npm run inspect -- x.pdf` |
 
 ### 階段 1 的檢查工具
 
