@@ -37,8 +37,8 @@ export const config = {
   },
 
   chunking: {
-    size: num('CHUNK_SIZE', 600),
-    overlap: num('CHUNK_OVERLAP', 100),
+    size: num('CHUNK_SIZE', 300),
+    overlap: num('CHUNK_OVERLAP', 60),
   },
 
   retrieval: {

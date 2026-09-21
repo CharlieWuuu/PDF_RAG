@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     vision_model: str = "gemini-3.5-flash-lite"
 
     # 切塊參數（以字元數計算，對中文較直觀）
-    chunk_size: int = 600
-    chunk_overlap: int = 100
+    chunk_size: int = 300
+    chunk_overlap: int = 60
 
     top_k: int = 5
     # cosine distance 門檻：最佳結果大於此值視為找不到相關內容，不呼叫 LLM
