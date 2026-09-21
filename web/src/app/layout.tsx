@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-Hant">
       <body className="min-h-screen bg-slate-50 text-slate-900">
-        <header className="border-b bg-white">
+        <header className="bg-white">
           <nav className="mx-auto flex max-w-3xl gap-6 px-6 py-4 text-sm">
             <Link href="/" className="font-medium hover:underline">
               問答

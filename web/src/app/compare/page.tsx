@@ -72,7 +72,7 @@ export default function ComparePage() {
           const state = states[b.key];
           return (
             <section key={b.key} className="space-y-3">
-              <header className="flex items-center gap-2 border-b pb-2">
+              <header className="flex items-center gap-2 pb-2">
                 <span className={`rounded px-2 py-0.5 text-xs text-white ${b.accent}`}>
                   {b.label}
                 </span>
@@ -89,7 +89,7 @@ export default function ComparePage() {
         })}
       </div>
 
-      <div className="flex gap-2 border-t bg-slate-50 pt-4">
+      <div className="flex gap-2 bg-slate-50 pt-4">
         <input
           className="flex-1 rounded-lg border px-4 py-2"
           placeholder="輸入問題，同時送給兩個後端…"

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { streamAsk, type Source } from '@/lib/api';
+import { API_BASE, streamAsk, type Source } from '@/lib/api';
 
 /** 檢索與生成是兩個階段，狀態分開才能顯示「搜尋中…」 */
 type Status = 'idle' | 'searching' | 'streaming';
@@ -61,9 +61,14 @@ export default function AskPage() {
       {/* 對話區在上，內容變長時自行捲動 */}
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {!answer && !error && status === 'idle' && (
-          <p className="pt-12 text-center text-sm text-slate-400">
-            輸入問題，我會根據已匯入的文件回答並標註出處。
-          </p>
+          <div className="pt-12 text-center text-sm text-slate-400">
+            <p>輸入問題，我會根據已匯入的文件回答並標註出處。</p>
+            {/* 兩個後端功能相同，不標示的話無從得知目前連的是哪一個 */}
+            <p className="mt-2 text-xs">
+              目前連線：{API_BASE.includes('8000') ? 'Python' : 'NestJS'}
+              <span className="ml-1 text-slate-300">{API_BASE.replace('http://', '')}</span>
+            </p>
+          </div>
         )}
 
         {status === 'searching' && <p className="text-sm text-slate-500">搜尋中…</p>}
@@ -117,7 +122,7 @@ export default function AskPage() {
       </div>
 
       {/* 輸入區固定在下方，不隨對話捲動 */}
-      <div className="flex gap-2 border-t bg-slate-50 pt-4">
+      <div className="flex gap-2 bg-slate-50 pt-4">
         <input
           className="flex-1 rounded-lg border px-4 py-2"
           placeholder="請輸入問題…"
