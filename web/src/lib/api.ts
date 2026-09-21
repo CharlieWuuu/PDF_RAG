@@ -35,6 +35,21 @@ export async function uploadDocument(file: File) {
   return res.json();
 }
 
+export interface ChunkRow {
+  id: string;
+  page: number;
+  chunk_index: number;
+  content: string;
+  dimensions: number;
+}
+
+/** 資料庫檢視頁用：看某份文件實際被切成哪些片段 */
+export async function listChunks(documentId: string): Promise<ChunkRow[]> {
+  const res = await fetch(`${API_BASE}/documents/${documentId}/chunks`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('取得片段失敗');
+  return res.json();
+}
+
 export async function deleteDocument(id: string) {
   const res = await fetch(`${API_BASE}/documents/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('刪除失敗');
@@ -48,8 +63,11 @@ export async function deleteDocument(id: string) {
 export async function* streamAsk(
   question: string,
   signal: AbortSignal,
+  // 並排對照頁需要同時打兩個後端，因此開放覆寫；
+  // 其餘頁面不傳，沿用環境變數的預設值
+  base: string = API_BASE,
 ): AsyncGenerator<AskEvent> {
-  const res = await fetch(`${API_BASE}/ask`, {
+  const res = await fetch(`${base}/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),

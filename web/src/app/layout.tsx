@@ -16,8 +16,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="font-medium hover:underline">
               問答
             </Link>
+            <Link href="/compare" className="font-medium hover:underline">
+              雙版本對照
+            </Link>
             <Link href="/documents" className="font-medium hover:underline">
               文件管理
+            </Link>
+            <Link href="/database" className="font-medium hover:underline">
+              資料庫
             </Link>
           </nav>
         </header>

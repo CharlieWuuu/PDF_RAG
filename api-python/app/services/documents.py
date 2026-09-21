@@ -71,6 +71,15 @@ async def list_documents() -> list[dict[str, Any]]:
     )
 
 
+async def list_chunks(document_id: str) -> list[dict[str, Any]]:
+    """供資料庫檢視頁使用：列出某份文件的所有片段。"""
+    return await db.query(
+        """SELECT id, page, chunk_index, content, vector_dims(embedding) AS dimensions
+           FROM chunks WHERE document_id = %s ORDER BY chunk_index""",
+        (document_id,),
+    )
+
+
 async def remove(document_id: str) -> None:
     # chunks 設了 ON DELETE CASCADE，刪文件即可連帶清除
     rows = await db.query("DELETE FROM documents WHERE id = %s RETURNING id", (document_id,))

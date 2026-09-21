@@ -65,6 +65,11 @@ export class DocumentsController {
     return this.documents.list();
   }
 
+  @Get(':id/chunks')
+  async chunks(@Param('id', ParseUUIDPipe) id: string) {
+    return this.documents.listChunks(id);
+  }
+
   @Delete(':id')
   // ParseUUIDPipe：格式不對就擋在進入 SQL 之前
   async remove(@Param('id', ParseUUIDPipe) id: string) {

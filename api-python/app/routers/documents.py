@@ -42,6 +42,11 @@ async def list_documents():
     return await service.list_documents()
 
 
+@router.get("/{document_id}/chunks")
+async def list_chunks(document_id: UUID):
+    return await service.list_chunks(str(document_id))
+
+
 @router.delete("/{document_id}")
 async def remove(document_id: UUID):
     """型別註記為 UUID，格式不對時 FastAPI 會直接回 422，擋在進入 SQL 之前。"""

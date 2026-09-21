@@ -66,6 +66,15 @@ export class DocumentsService {
     );
   }
 
+  /** 供資料庫檢視頁使用：列出某份文件的所有片段 */
+  async listChunks(documentId: string) {
+    return this.db.query(
+      `SELECT id, page, chunk_index, content, vector_dims(embedding) AS dimensions
+       FROM chunks WHERE document_id = $1 ORDER BY chunk_index`,
+      [documentId],
+    );
+  }
+
   async remove(id: string): Promise<void> {
     // chunks 設了 ON DELETE CASCADE，刪文件即可連帶清除
     const rows = await this.db.query('DELETE FROM documents WHERE id = $1 RETURNING id', [id]);
