@@ -67,10 +67,6 @@ export default function ComparePage() {
 
   return (
     <div className="flex h-[calc(100vh-8.5rem)] flex-col gap-4">
-      {/* 預設即為雙版本對照：同一個問題送給兩個後端，直接比較結果 */}
-      <p className="text-xs text-slate-400">
-        同一個問題同時送給兩個後端。Python 版具備圖表理解，NestJS 版為純文字。
-      </p>
       <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2">
         {BACKENDS.map((b) => {
           const state = states[b.key];
