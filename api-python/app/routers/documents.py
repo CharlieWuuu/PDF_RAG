@@ -2,9 +2,10 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile, status
 
 from app.providers.gemini import GeminiEmbeddingProvider
+from app.providers.vision import GeminiVisionProvider
 from app.services import documents as service
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -15,6 +16,7 @@ MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 
 # 換 embedding 供應商只改這一行
 _embedding = GeminiEmbeddingProvider()
+_vision = GeminiVisionProvider()
 
 
 @router.post("")
@@ -30,7 +32,7 @@ async def upload(file: UploadFile = File(...)):  # noqa: B008 - FastAPI 的慣�
     # FastAPI 依 RFC 2231 正確解碼檔名，
     # 不像 multer 需要額外處理中文檔名的 latin1 問題
     try:
-        result = await service.ingest(file.filename or "未命名.pdf", data, _embedding)
+        result = await service.ingest(file.filename or "未命名.pdf", data, _embedding, _vision)
     except service.NoTextError as err:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(err)) from err
 
@@ -40,6 +42,18 @@ async def upload(file: UploadFile = File(...)):  # noqa: B008 - FastAPI 的慣�
 @router.get("")
 async def list_documents():
     return await service.list_documents()
+
+
+@router.get("/{document_id}/pages/{page}/image")
+async def page_image(document_id: UUID, page: int):
+    """回傳頁面截圖，讓使用者能核對 AI 對圖表的描述是否正確。"""
+    image = await service.get_page_image(str(document_id), page)
+    if image is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "找不到這一頁的截圖")
+    # 截圖不會變動，可讓瀏覽器長時間快取
+    return Response(
+        image, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
+    )
 
 
 @router.get("/{document_id}/chunks")

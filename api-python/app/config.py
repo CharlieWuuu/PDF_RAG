@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # Gemini 預設 3072 維，指定 1536 以沿用既有的 vector(1536) 欄位
     embedding_dimensions: int = 1536
     llm_model: str = "gemini-3.5-flash-lite"
+    # 讀圖用的模型。與 llm_model 分開設定，
+    # 因為視覺任務與純文字生成的需求不同，可各自調整
+    vision_model: str = "gemini-3.5-flash-lite"
 
     # 切塊參數（以字元數計算，對中文較直觀）
     chunk_size: int = 600

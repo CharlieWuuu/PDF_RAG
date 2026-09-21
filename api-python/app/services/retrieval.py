@@ -17,6 +17,9 @@ class Source:
     content: str
     # cosine distance，0 表示完全相同；除錯與門檻校準用
     distance: float
+    # 'text'（課文原文）或 'visual'（視覺模型對圖表的描述）
+    source: str = "text"
+    document_id: str = ""
 
 
 def is_relevant(sources: list[Source], threshold: float) -> bool:
@@ -40,7 +43,9 @@ def build_prompt(question: str, sources: list[Source]) -> tuple[str, str]:
     只能依據片段作答（防幻覺）、不知道就說不知道（給模型退路）、標註出處（讓使用者可驗證）。
     """
     context = "\n\n".join(
-        f"[片段 {i + 1}]（檔名：{s.filename}，第 {s.page} 頁）\n{s.content}"
+        f"[片段 {i + 1}]（檔名：{s.filename}，第 {s.page} 頁"
+        + ("，圖表說明" if s.source == "visual" else "")
+        + f"）\n{s.content}"
         for i, s in enumerate(sources)
     )
 
@@ -53,6 +58,7 @@ def build_prompt(question: str, sources: list[Source]) -> tuple[str, str]:
             f"頁碼必須原封不動取自上方片段的標示，只能是 {_page_list(sources)} 其中之一，",
             "絕對不可以自行推算或填入其他頁碼。",
             "無論如何都必須輸出文字，不可以回覆空白。",
+            "標示為「圖表說明」的片段來自 AI 對圖片的判讀，引用時請註明出自圖表。",
             "請使用台灣繁體中文與全形標點作答。",
         ]
     )

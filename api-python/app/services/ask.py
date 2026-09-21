@@ -21,7 +21,8 @@ async def retrieve(question: str, embedding: EmbeddingProvider) -> list[Source]:
     # <=> 是 pgvector 的 cosine distance 運算子。
     # 選 cosine 而非 L2：embedding 比較的是語意方向，向量長度不具意義。
     rows = await db.query(
-        """SELECT d.filename, c.page, c.content, c.embedding <=> %s AS distance
+        """SELECT d.filename, c.page, c.content, c.source, c.document_id,
+                  c.embedding <=> %s AS distance
            FROM chunks c
            JOIN documents d ON d.id = c.document_id
            ORDER BY c.embedding <=> %s
@@ -35,6 +36,8 @@ async def retrieve(question: str, embedding: EmbeddingProvider) -> list[Source]:
             page=r["page"],
             content=r["content"],
             distance=float(r["distance"]),
+            source=r["source"],
+            document_id=str(r["document_id"]),
         )
         for r in rows
     ]
@@ -68,6 +71,8 @@ async def answer(
                 "page": s.page,
                 "content": s.content,
                 "distance": s.distance,
+                "source": s.source,
+                "documentId": s.document_id,
             }
             for s in sources
         ],
