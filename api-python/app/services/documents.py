@@ -15,6 +15,10 @@ from app.providers.base import EmbeddingProvider
 from app.providers.vision import GeminiVisionProvider
 
 
+# 每次送給視覺模型的頁數上限，避免同時持有過多圖片
+VISION_BATCH = 3
+
+
 class NoTextError(Exception):
     """PDF 擷取不到文字，多半是掃描版。"""
 
@@ -109,12 +113,15 @@ async def _build_visuals(
     if vision is None or not targets:
         return images, []
 
-    described = await asyncio.gather(*(vision.describe(images[p]) for p in targets))
-
+    # 逐批送出而非一次 gather 全部：一次建立數十個 coroutine 會讓
+    # 對應的圖片同時被引用，在 512MB 的環境下容易耗盡記憶體
     visual_chunks: list[tuple[int, int, str]] = []
-    for page, text in zip(targets, described, strict=True):
-        if text:
-            visual_chunks.append((page, start_index + len(visual_chunks), text))
+    for offset in range(0, len(targets), VISION_BATCH):
+        batch = targets[offset : offset + VISION_BATCH]
+        described = await asyncio.gather(*(vision.describe(images[p]) for p in batch))
+        for page, text in zip(batch, described, strict=True):
+            if text:
+                visual_chunks.append((page, start_index + len(visual_chunks), text))
 
     return images, visual_chunks
 

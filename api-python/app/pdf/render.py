@@ -10,8 +10,14 @@ JPEG_QUALITY = 80
 
 def render_page(doc: pymupdf.Document, page_number: int) -> bytes:
     """回傳該頁的 JPEG 二進位。page_number 從 1 開始。"""
-    pixmap = doc[page_number - 1].get_pixmap(dpi=RENDER_DPI)
-    return pixmap.tobytes("jpeg", jpg_quality=JPEG_QUALITY)
+    page = doc[page_number - 1]
+    pixmap = page.get_pixmap(dpi=RENDER_DPI)
+    data = pixmap.tobytes("jpeg", jpg_quality=JPEG_QUALITY)
+    # 明確釋放：pixmap 是未壓縮的點陣圖，單頁可達數十 MB，
+    # 不釋放的話整份文件處理完之前記憶體會持續累積
+    del pixmap
+    page.clean_contents()
+    return data
 
 
 def has_images(doc: pymupdf.Document, page_number: int) -> bool:

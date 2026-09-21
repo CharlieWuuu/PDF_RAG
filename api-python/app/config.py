@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # 避開 NestJS 版佔用的 3001
     python_port: int = 8000
 
+    # 上傳大小上限（MB）。解析與渲染的記憶體用量遠大於檔案本身，
+    # 部署環境記憶體較小時需調低，否則會因 OOM 導致容器被重啟
+    max_upload_mb: int = 40
+
     # 允許的前端來源，以逗號分隔。
     # 開發時預設放行 localhost，正式環境需明確指定網域，
     # 不使用萬用字元避免任何網站都能呼叫這個 API

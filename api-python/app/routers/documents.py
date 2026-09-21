@@ -4,15 +4,17 @@ from uuid import UUID
 
 from fastapi import APIRouter, File, HTTPException, Response, UploadFile, status
 
+from app.config import get_settings
 from app.providers.gemini import GeminiEmbeddingProvider
 from app.providers.vision import GeminiVisionProvider
 from app.services import documents as service
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
-# 教科書多為圖文混排，圖片佔去絕大部分體積（文字其實不多），
-# 30～40MB 很常見，因此上限放寬到 100MB
-MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+# 教科書多為圖文混排，圖片佔去絕大部分體積（文字其實不多），30～40MB 很常見。
+# 但解析與渲染的記憶體用量遠大於檔案本身，實測 28MB 的 PDF 峰值約 233MB，
+# 而部署環境僅 512MB，因此上限設為 40MB 並由環境變數可調
+MAX_UPLOAD_BYTES = get_settings().max_upload_mb * 1024 * 1024
 
 # 換 embedding 供應商只改這一行
 _embedding = GeminiEmbeddingProvider()
