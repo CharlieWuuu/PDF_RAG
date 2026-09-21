@@ -39,6 +39,20 @@ jobs:
       - run: npm run build
         working-directory: web
 
+  api-python:
+    name: Python API 測試與建置
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+        working-directory: api-python
+      # 單元測試只涵蓋純函式，不需要資料庫或 API 金鑰
+      - run: uv run pytest -q
+        working-directory: api-python
+
   docker:
     name: 建置 Docker 映像檔
     runs-on: ubuntu-latest
@@ -46,3 +60,4 @@ jobs:
       - uses: actions/checkout@v4
       # 只驗證映像檔建得起來，不推送到 registry
       - run: docker build -t pdf-rag-api ./api
+      - run: docker build -t pdf-rag-api-python ./api-python
