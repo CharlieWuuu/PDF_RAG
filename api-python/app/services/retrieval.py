@@ -27,6 +27,11 @@ def is_relevant(sources: list[Source], threshold: float) -> bool:
     return bool(sources) and sources[0].distance < threshold
 
 
+def _page_list(sources: list[Source]) -> str:
+    """把可用頁碼列給模型，避免它自行推算出不存在的頁碼。"""
+    return "、".join(f"第 {p} 頁" for p in sorted({s.page for s in sources}))
+
+
 def build_prompt(question: str, sources: list[Source]) -> tuple[str, str]:
     """
     回傳 (system, user)。
@@ -45,6 +50,8 @@ def build_prompt(question: str, sources: list[Source]) -> tuple[str, str]:
             "若片段中沒有足夠資訊，就只回覆「資料中找不到相關內容。」這一句，不要加上任何出處或說明，",
             "也絕對不要依據自身知識補充或推測。",
             "只有在實際引用片段內容作答時，才標註出處，格式為（檔名，第 N 頁）。",
+            f"頁碼必須原封不動取自上方片段的標示，只能是 {_page_list(sources)} 其中之一，",
+            "絕對不可以自行推算或填入其他頁碼。",
             "無論如何都必須輸出文字，不可以回覆空白。",
             "請使用台灣繁體中文與全形標點作答。",
         ]

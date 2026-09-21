@@ -26,6 +26,14 @@ export function isRelevant(sources: Source[], threshold: number): boolean {
  * Prompt 的三個限制缺一不可：
  * 只能依據片段作答（防幻覺）、不知道就說不知道（給模型退路）、標註出處（讓使用者可驗證）。
  */
+/** 把可用頁碼列給模型，避免它自行推算出不存在的頁碼 */
+function pageList(sources: Source[]): string {
+  return [...new Set(sources.map((s) => s.page))]
+    .sort((a, b) => a - b)
+    .map((p) => `第 ${p} 頁`)
+    .join('、');
+}
+
 export function buildPrompt(question: string, sources: Source[]) {
   const context = sources
     .map((s, i) => `[片段 ${i + 1}]（檔名：${s.filename}，第 ${s.page} 頁）\n${s.content}`)
@@ -37,6 +45,8 @@ export function buildPrompt(question: string, sources: Source[]) {
       '若片段中沒有足夠資訊，就只回覆「資料中找不到相關內容。」這一句，不要加上任何出處或說明，',
       '也絕對不要依據自身知識補充或推測。',
       '只有在實際引用片段內容作答時，才標註出處，格式為（檔名，第 N 頁）。',
+      `頁碼必須原封不動取自上方片段的標示，只能是 ${pageList(sources)} 其中之一，`,
+      '絕對不可以自行推算或填入其他頁碼。',
       '無論如何都必須輸出文字，不可以回覆空白。',
       '請使用台灣繁體中文與全形標點作答。',
     ].join('\n'),
