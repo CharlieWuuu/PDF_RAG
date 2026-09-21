@@ -4,10 +4,6 @@ import { useRef, useState } from 'react';
 import { AnswerPanel, emptyAnswer, type AnswerState } from '@/components/AnswerPanel';
 import { streamAsk } from '@/lib/api';
 
-/**
- * 線上只部署 Python 版，因此介面上不再並排兩個後端。
- * NestJS 版的實作仍保留在 repo 的 api/ 目錄，可於本機啟動對照。
- */
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8000';
 
 export default function ComparePage() {

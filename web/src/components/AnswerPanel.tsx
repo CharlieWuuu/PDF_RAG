@@ -88,7 +88,7 @@ function SourceItem({ source, apiBase }: { source: Source; apiBase: string }) {
             alt={`第 ${source.page} 頁`}
             className="w-32 cursor-zoom-in rounded border"
             onClick={() => setZoomed(true)}
-            // 沒有截圖的來源（例如 NestJS 版）直接隱藏，不顯示破圖
+            // 沒有截圖的來源直接隱藏，不顯示破圖
             onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
           />
           <p className="mt-1 text-slate-400">點圖放大核對</p>

@@ -1,4 +1,4 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001';
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8000';
 
 export interface DocumentItem {
   id: string;
@@ -14,7 +14,7 @@ export interface Source {
   distance: number;
   /** 'text'（課文原文）或 'visual'（視覺模型對圖表的描述） */
   source?: 'text' | 'visual';
-  /** 用來取回該頁截圖；NestJS 版未實作截圖時可能為空 */
+  /** 用來取回該頁截圖；文件若無截圖則為空 */
   documentId?: string;
 }
 
