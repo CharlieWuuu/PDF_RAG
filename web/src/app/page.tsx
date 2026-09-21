@@ -73,7 +73,7 @@ export default function ComparePage() {
             disabled={!question.trim()}
             onClick={handleAsk}
           >
-            同時送出
+            送出
           </button>
         ) : (
           <button
