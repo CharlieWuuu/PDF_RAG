@@ -17,3 +17,9 @@ build/
 # 系統
 .DS_Store
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
