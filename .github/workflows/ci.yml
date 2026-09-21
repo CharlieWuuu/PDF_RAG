@@ -38,6 +38,10 @@ jobs:
         working-directory: web
       - run: npm run build
         working-directory: web
+        env:
+          # 正式建置會檢查此變數是否存在，CI 只驗證能否建置成功，
+          # 給一個佔位值即可，實際位址由 Vercel 的環境變數提供
+          NEXT_PUBLIC_API_BASE: http://localhost:8000
 
   api-python:
     name: Python API 測試與建置
