@@ -2,9 +2,9 @@
 
 import { useRef, useState } from 'react';
 import { AnswerPanel, emptyAnswer, type AnswerState } from '@/components/AnswerPanel';
-import { streamAsk } from '@/lib/api';
+import { API_BASE, streamAsk } from '@/lib/api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8000';
+
 
 export default function ComparePage() {
   const [question, setQuestion] = useState('');

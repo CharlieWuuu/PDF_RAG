@@ -1,4 +1,18 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8000';
+/**
+ * 後端位址。
+ * 正式環境若未設定 NEXT_PUBLIC_API_BASE，會落回 localhost 而靜默失敗，
+ * 因此在非開發環境下明確拋錯，讓問題在部署時就被發現。
+ */
+function resolveApiBase(): string {
+  const configured = process.env.NEXT_PUBLIC_API_BASE;
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('缺少必要的環境變數：NEXT_PUBLIC_API_BASE');
+  }
+  return 'http://localhost:8000';
+}
+
+export const API_BASE = resolveApiBase();
 
 export interface DocumentItem {
   id: string;
