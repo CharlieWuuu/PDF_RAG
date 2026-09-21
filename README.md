@@ -106,9 +106,11 @@ pgvector 的 `<=>` 回傳 cosine distance，0 表示完全相同。**最佳結�
 
 ## 開發環境設定
 
+所有憑證（資料庫帳密、API 金鑰）一律放在 `.env`，`docker-compose.yml` 只以 `${VAR}` 引用，不寫死任何值。
+
 ```bash
 # 1. 設定環境變數
-cp .env.example .env    # 填入 GEMINI_API_KEY
+cp .env.example .env    # 填入 GEMINI_API_KEY 與 POSTGRES_PASSWORD
 
 # 2. 啟動資料庫（容器首次啟動會自動執行 db/init.sql 建表）
 docker compose up -d

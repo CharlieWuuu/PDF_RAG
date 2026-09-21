@@ -4,9 +4,11 @@ services:
   db:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: pdf_rag
+      # 一律從 .env 讀取，不把任何憑證寫死在版控檔案裡。
+      # 冒號後的值只是本機開發的預設，正式環境請在 .env 設定強密碼
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?請在 .env 設定 POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pdf_rag}
     ports:
       - '5433:5432'   # 避開本機可能已佔用的 5432
     volumes:
@@ -14,7 +16,8 @@ services:
       # 容器首次啟動時自動執行，省去手動建表步驟
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d pdf_rag']
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pdf_rag}']
       interval: 5s
       retries: 10
 
