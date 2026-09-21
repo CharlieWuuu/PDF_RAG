@@ -10,6 +10,10 @@ export interface Source {
   content: string;
   /** cosine distance，0 表示完全相同；除錯與門檻校準用 */
   distance: number;
+  /** 'text'（課文原文）或 'visual'（視覺模型對圖表的描述） */
+  source: 'text' | 'visual';
+  /** 前端用來取回該頁截圖 */
+  documentId: string;
 }
 
 export const NO_ANSWER = '資料中找不到相關內容。';
@@ -36,7 +40,11 @@ function pageList(sources: Source[]): string {
 
 export function buildPrompt(question: string, sources: Source[]) {
   const context = sources
-    .map((s, i) => `[片段 ${i + 1}]（檔名：${s.filename}，第 ${s.page} 頁）\n${s.content}`)
+    .map(
+      (s, i) =>
+        `[片段 ${i + 1}]（檔名：${s.filename}，第 ${s.page} 頁` +
+        `${s.source === 'visual' ? '，圖表說明' : ''}）\n${s.content}`,
+    )
     .join('\n\n');
 
   return {
@@ -48,6 +56,7 @@ export function buildPrompt(question: string, sources: Source[]) {
       `頁碼必須原封不動取自上方片段的標示，只能是 ${pageList(sources)} 其中之一，`,
       '絕對不可以自行推算或填入其他頁碼。',
       '無論如何都必須輸出文字，不可以回覆空白。',
+      '標示為「圖表說明」的片段來自 AI 對圖片的判讀，引用時請註明出自圖表。',
       '請使用台灣繁體中文與全形標點作答。',
     ].join('\n'),
     user: `文件片段：\n\n${context}\n\n問題：${question}`,

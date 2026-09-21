@@ -75,6 +75,19 @@ export class DocumentsService {
     );
   }
 
+  /**
+   * 回傳頁面截圖。
+   * 本版匯入時不產生截圖（pdfjs 在 Node 渲染教科書過慢，見 README），
+   * 但若該文件由 Python 版匯入，這裡仍讀得到——兩版共用同一個資料庫。
+   */
+  async getPageImage(documentId: string, page: number): Promise<Buffer | null> {
+    const rows = await this.db.query<{ image: Buffer }>(
+      'SELECT image FROM page_images WHERE document_id = $1 AND page = $2',
+      [documentId, page],
+    );
+    return rows[0]?.image ?? null;
+  }
+
   async remove(id: string): Promise<void> {
     // chunks 設了 ON DELETE CASCADE，刪文件即可連帶清除
     const rows = await this.db.query('DELETE FROM documents WHERE id = $1 RETURNING id', [id]);

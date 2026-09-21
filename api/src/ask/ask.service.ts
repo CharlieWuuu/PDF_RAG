@@ -22,7 +22,8 @@ export class AskService {
     // <=> 是 pgvector 的 cosine distance 運算子。
     // 選 cosine 而非 L2：embedding 比較的是語意方向，向量長度不具意義。
     return this.db.query<Source>(
-      `SELECT d.filename, c.page, c.content, c.embedding <=> $1 AS distance
+      `SELECT d.filename, c.page, c.content, c.source, c.document_id AS "documentId",
+              c.embedding <=> $1 AS distance
        FROM chunks c
        JOIN documents d ON d.id = c.document_id
        ORDER BY c.embedding <=> $1

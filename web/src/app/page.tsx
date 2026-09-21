@@ -1,151 +1,119 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { API_BASE, streamAsk, type Source } from '@/lib/api';
+import { useRef, useState } from 'react';
+import { AnswerPanel, emptyAnswer, type AnswerState } from '@/components/AnswerPanel';
+import { streamAsk } from '@/lib/api';
 
-/** 檢索與生成是兩個階段，狀態分開才能顯示「搜尋中…」 */
-type Status = 'idle' | 'searching' | 'streaming';
+/**
+ * 兩個後端並排對照。
+ * 明確寫死兩個位址而非讀環境變數，因為這個頁面的目的就是同時比較兩者；
+ * 其餘頁面仍沿用 NEXT_PUBLIC_API_BASE。
+ */
+const BACKENDS = [
+  { key: 'node', label: 'NestJS', base: 'http://localhost:3001', accent: 'bg-emerald-600' },
+  { key: 'python', label: 'Python', base: 'http://localhost:8000', accent: 'bg-sky-600' },
+] as const;
 
-export default function AskPage() {
+export default function ComparePage() {
   const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState('');
-  const [sources, setSources] = useState<Source[]>([]);
-  const [status, setStatus] = useState<Status>('idle');
-  const [error, setError] = useState('');
+  const [states, setStates] = useState<Record<string, AnswerState>>({
+    node: emptyAnswer,
+    python: emptyAnswer,
+  });
   const abortRef = useRef<AbortController | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // 答案逐字增加時保持捲動在底部，使用者不必手動往下拉
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [answer, sources]);
+  const busy = Object.values(states).some((s) => s.status !== 'idle');
+
+  function patch(key: string, next: Partial<AnswerState>) {
+    setStates((prev) => ({ ...prev, [key]: { ...prev[key], ...next } }));
+  }
+
+  async function runOne(key: string, base: string, signal: AbortSignal) {
+    const startedAt = performance.now();
+    patch(key, { ...emptyAnswer, status: 'searching' });
+
+    try {
+      for await (const event of streamAsk(question, signal, base)) {
+        if (event.type === 'sources') {
+          patch(key, { sources: event.sources, status: 'streaming' });
+        } else if (event.type === 'text') {
+          setStates((prev) => ({
+            ...prev,
+            [key]: { ...prev[key], answer: prev[key].answer + event.text },
+          }));
+        } else if (event.type === 'error') {
+          patch(key, { error: event.message });
+        }
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        patch(key, { error: err instanceof Error ? err.message : '查詢失敗' });
+      }
+    } finally {
+      patch(key, { status: 'idle', elapsedMs: Math.round(performance.now() - startedAt) });
+    }
+  }
 
   async function handleAsk() {
-    if (!question.trim() || status !== 'idle') return;
-
-    setAnswer('');
-    setSources([]);
-    setError('');
-    setStatus('searching');
+    if (!question.trim() || busy) return;
 
     const controller = new AbortController();
     abortRef.current = controller;
 
-    try {
-      for await (const event of streamAsk(question, controller.signal)) {
-        if (event.type === 'sources') {
-          setSources(event.sources);
-          // 收到來源代表檢索已完成，接下來是逐字生成
-          setStatus('streaming');
-        } else if (event.type === 'text') {
-          setAnswer((prev) => prev + event.text);
-        } else if (event.type === 'error') {
-          setError(event.message);
-        }
-      }
-    } catch (e) {
-      // 使用者主動按停止時會丟 AbortError，不算錯誤
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : '查詢失敗');
-      }
-    } finally {
-      setStatus('idle');
-      abortRef.current = null;
-    }
+    // 兩邊同時發出，才能公平比較反應速度
+    await Promise.all(BACKENDS.map((b) => runOne(b.key, b.base, controller.signal)));
+    abortRef.current = null;
   }
 
   return (
-    // 高度固定為視窗扣掉 header，讓對話區自己捲動、輸入框永遠停在底部
     <div className="flex h-[calc(100vh-8.5rem)] flex-col gap-4">
-      {/* 對話區在上，內容變長時自行捲動 */}
-      <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-        {!answer && !error && status === 'idle' && (
-          <div className="pt-12 text-center text-sm text-slate-400">
-            <p>輸入問題，我會根據已匯入的文件回答並標註出處。</p>
-            {/* 兩個後端功能相同，不標示的話無從得知目前連的是哪一個 */}
-            <p className="mt-2 text-xs">
-              目前連線：{API_BASE.includes('8000') ? 'Python' : 'NestJS'}
-              <span className="ml-1 text-slate-300">{API_BASE.replace('http://', '')}</span>
-            </p>
-          </div>
-        )}
-
-        {status === 'searching' && <p className="text-sm text-slate-500">搜尋中…</p>}
-        {error && <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-
-        {answer && (
-          <div className="rounded-lg border bg-white p-5">
-            {/*
-              模型的回答帶有 Markdown 語法（粗體、編號清單），直接輸出會看到
-              原始的 ** 符號。react-markdown 預設不解析 raw HTML，
-              因此模型即使吐出 <script> 也只會被當成文字，不必額外消毒。
-            */}
-            <div className="space-y-3 leading-relaxed">
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p>{children}</p>,
-                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                  ol: ({ children }) => <ol className="list-decimal space-y-2 pl-5">{children}</ol>,
-                  ul: ({ children }) => <ul className="list-disc space-y-2 pl-5">{children}</ul>,
-                  li: ({ children }) => <li className="pl-1">{children}</li>,
-                  code: ({ children }) => (
-                    <code className="rounded bg-slate-100 px-1 py-0.5 text-sm">{children}</code>
-                  ),
-                }}
-              >
-                {answer}
-              </ReactMarkdown>
-            </div>
-          </div>
-        )}
-
-        {sources.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="text-sm font-medium text-slate-600">參考來源</h2>
-            {sources.map((s, i) => (
-              <details key={i} className="rounded-lg border bg-white p-3 text-sm">
-                <summary className="cursor-pointer">
-                  {s.filename}　第 {s.page} 頁
-                  <span className="ml-2 text-xs text-slate-400">
-                    距離 {s.distance.toFixed(3)}
+      {/* 預設即為雙版本對照：同一個問題送給兩個後端，直接比較結果 */}
+      <p className="text-xs text-slate-400">
+        同一個問題同時送給兩個後端。Python 版具備圖表理解，NestJS 版為純文字。
+      </p>
+      <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2">
+        {BACKENDS.map((b) => {
+          const state = states[b.key];
+          return (
+            <section key={b.key} className="space-y-3">
+              <header className="flex items-center gap-2 pb-2">
+                <span className={`rounded px-2 py-0.5 text-xs text-white ${b.accent}`}>
+                  {b.label}
+                </span>
+                <span className="text-xs text-slate-400">{b.base.replace('http://', '')}</span>
+                {state.elapsedMs !== null && state.status === 'idle' && (
+                  <span className="ml-auto text-xs text-slate-500">
+                    {(state.elapsedMs / 1000).toFixed(1)} 秒
                   </span>
-                </summary>
-                <p className="mt-2 whitespace-pre-wrap text-slate-600">{s.content}</p>
-              </details>
-            ))}
-          </div>
-        )}
-
-        {/* 串流時把畫面捲到底，新內容才不會被輸入框擋住 */}
-        <div ref={bottomRef} />
+                )}
+              </header>
+              <AnswerPanel state={state} apiBase={b.base} />
+            </section>
+          );
+        })}
       </div>
 
-      {/* 輸入區固定在下方，不隨對話捲動 */}
       <div className="flex gap-2 bg-slate-50 pt-4">
         <input
           className="flex-1 rounded-lg border px-4 py-2"
-          placeholder="請輸入問題…"
+          placeholder="輸入問題，同時送給兩個後端…"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          // 中文輸入法選字時也會觸發 Enter，isComposing 用來排除那種情況，
-          // 否則選字按 Enter 會誤送出未完成的問題
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAsk();
           }}
         />
-        {status === 'idle' ? (
+        {!busy ? (
           <button
             className="rounded-lg bg-slate-900 px-5 py-2 text-white disabled:opacity-40"
             disabled={!question.trim()}
             onClick={handleAsk}
           >
-            送出
+            同時送出
           </button>
         ) : (
           <button
             className="rounded-lg border border-slate-300 bg-white px-5 py-2"
-            // 中止 fetch 會關閉連線，後端據此也會中止對 LLM 的請求
             onClick={() => abortRef.current?.abort()}
           >
             停止

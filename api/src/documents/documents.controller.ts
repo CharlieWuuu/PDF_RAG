@@ -4,15 +4,17 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Post,
+  Res,
   UploadedFile,
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { DocumentsService } from './documents.service.js';
 import { UploadErrorFilter } from './upload-error.filter.js';
 
@@ -63,6 +65,20 @@ export class DocumentsController {
   @Get()
   async list() {
     return this.documents.list();
+  }
+
+  @Get(':id/pages/:page/image')
+  async pageImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('page') page: string,
+    @Res() res: Response,
+  ) {
+    const image = await this.documents.getPageImage(id, Number(page));
+    if (!image) throw new NotFoundException('找不到這一頁的截圖');
+    // 截圖不會變動，可讓瀏覽器長時間快取
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(image);
   }
 
   @Get(':id/chunks')

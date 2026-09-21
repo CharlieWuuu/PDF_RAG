@@ -12,6 +12,15 @@ export interface Source {
   page: number;
   content: string;
   distance: number;
+  /** 'text'（課文原文）或 'visual'（視覺模型對圖表的描述） */
+  source?: 'text' | 'visual';
+  /** 用來取回該頁截圖；NestJS 版未實作截圖時可能為空 */
+  documentId?: string;
+}
+
+/** 頁面截圖網址。讓使用者能核對 AI 對圖表的描述是否正確 */
+export function pageImageUrl(base: string, documentId: string, page: number): string {
+  return `${base}/documents/${documentId}/pages/${page}/image`;
 }
 
 /** 後端 SSE 的事件型別，與 ask.controller 送出的 JSON 對應 */
