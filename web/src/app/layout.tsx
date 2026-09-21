@@ -14,10 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="bg-white">
           <nav className="mx-auto flex max-w-3xl gap-6 px-6 py-4 text-sm">
             <Link href="/" className="font-medium hover:underline">
-              雙版本對照
-            </Link>
-            <Link href="/ask" className="font-medium hover:underline">
-              單一後端問答
+              問答
             </Link>
             <Link href="/documents" className="font-medium hover:underline">
               文件管理

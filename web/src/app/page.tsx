@@ -92,7 +92,7 @@ export default function ComparePage() {
       <div className="flex gap-2 bg-slate-50 pt-4">
         <input
           className="flex-1 rounded-lg border px-4 py-2"
-          placeholder="輸入問題，同時送給兩個後端…"
+          placeholder="請輸入問題…"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => {
