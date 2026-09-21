@@ -42,7 +42,7 @@ export const config = {
   },
 
   retrieval: {
-    topK: num('TOP_K', 5),
+    topK: num('TOP_K', 8),
     /** cosine distance；越小越相似。超過此值視為找不到相關內容 */
     threshold: num('SIMILARITY_THRESHOLD', 0.55),
   },

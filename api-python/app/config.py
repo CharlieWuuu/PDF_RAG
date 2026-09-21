@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     chunk_size: int = 300
     chunk_overlap: int = 60
 
-    top_k: int = 5
+    # 切塊改為 300 字後，單塊脈絡較短，取 8 塊約等於 2400 字的參考範圍。
+    # 實測取 5 塊時圖表描述未被納入，答案少了統計數據
+    top_k: int = 8
     # cosine distance 門檻：最佳結果大於此值視為找不到相關內容，不呼叫 LLM
     similarity_threshold: float = 0.55
 
