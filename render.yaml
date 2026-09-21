@@ -1,0 +1,17 @@
+# Render 部署設定。連結 GitHub repo 後，Render 會讀取這份自動建立服務。
+services:
+  - type: web
+    name: pdf-rag-api
+    runtime: docker
+    dockerfilePath: ./api-python/Dockerfile
+    dockerContext: ./api-python
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # 以下三個需在 Render 後台手動填入，不寫在檔案裡避免外洩
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

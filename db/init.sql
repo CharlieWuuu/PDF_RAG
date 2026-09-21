@@ -1,3 +1,7 @@
+-- 本機由 docker-compose 首次啟動時自動執行。
+-- 正式環境（Neon）請把這份內容貼進其 SQL Editor 執行一次——
+-- 只維護這一份，避免兩份 schema 隨時間漂移。
+
 -- pgvector 擴充必須先啟用，vector 型別才存在
 CREATE EXTENSION IF NOT EXISTS vector;
 

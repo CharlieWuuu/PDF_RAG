@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # 避開 NestJS 版佔用的 3001
     python_port: int = 8000
 
+    # 允許的前端來源，以逗號分隔。
+    # 開發時預設放行 localhost，正式環境需明確指定網域，
+    # 不使用萬用字元避免任何網站都能呼叫這個 API
+    cors_origins: str = "http://localhost:3000"
+
 
 @lru_cache
 def get_settings() -> Settings:

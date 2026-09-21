@@ -24,11 +24,15 @@ async def open_pool() -> None:
     _pool = AsyncConnectionPool(
         settings.database_url,
         min_size=1,
-        max_size=10,
+        # Neon 免費方案的連線數有限，且本應用為 demo 規模，不需要大量連線
+        max_size=5,
         open=False,
         kwargs={"row_factory": dict_row},
     )
-    await _pool.open(wait=True)
+    # 不等待連線建立完成：資料庫短暫不可用時，應用仍應正常啟動，
+    # 否則部署平台的健康檢查會因啟動逾時而判定失敗。
+    # 連線會在首次查詢時建立，失敗則由該次請求回報錯誤
+    await _pool.open(wait=False)
 
 
 async def close_pool() -> None:
